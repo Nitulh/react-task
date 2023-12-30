@@ -34,16 +34,19 @@ const Problem2 = () => {
 
   const fetchUSContacts = () => {
     setModalBVisible(true);
+    setModalAVisible(false);
     window.history.pushState({}, "", "/modal-b");
+    // Fetch only United States contacts here
+    fetchContacts("https://contact.mediusware.com/api/country-contacts/united%20states/?page=1");
   };
-
+  
   useEffect(() => {
     if (modalAVisible) {
       fetchContacts("https://contact.mediusware.com/api/contacts/?page=1");
     } else if (modalBVisible) {
-      fetchContacts(
-        "https://contact.mediusware.com/api/country-contacts/United%20States/?page=1"
-      );
+      fetchContacts("https://contact.mediusware.com/api/country-contacts/united%20states/?page=1");
+      // Reset filteredContacts to initial state when changing modals
+      setFilteredContacts(contacts);
     }
   }, [modalAVisible, modalBVisible]);
 
@@ -73,11 +76,16 @@ const Problem2 = () => {
 
   const loadMoreContacts = async () => {
     if (!hasMore) return;
-
+  
     try {
-      const response = await axios.get(
-        `https://contact.mediusware.com/api/contacts/?page=${page + 1}`
-      );
+      let nextPageUrl = '';
+      if (modalBVisible) {
+        nextPageUrl = `https://contact.mediusware.com/api/country-contacts/united%20states/?page=${page + 1}`;
+      } else {
+        nextPageUrl = `https://contact.mediusware.com/api/contacts/?page=${page + 1}`;
+      }
+  
+      const response = await axios.get(nextPageUrl);
       const newData = response.data.results;
       setContacts([...contacts, ...newData]);
       setFilteredContacts([...filteredContacts, ...newData]);
@@ -219,6 +227,7 @@ const Problem2 = () => {
                   {contact.country.name} - {contact.phone}
                 </li>
               ))}
+               <p>No more pages to load.</p>
             </ul>
           </Modal.Body>
           <Modal.Footer>
@@ -300,6 +309,7 @@ const Problem2 = () => {
                   {contact.country.name} - {contact.phone}
                 </li>
               ))}
+               <p>No more pages to load.</p>
             </ul>
           </Modal.Body>
           <Modal.Footer>
